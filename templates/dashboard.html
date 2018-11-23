@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Dashboard - AccessControl</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    
+    <script src="static/js/application.js"></script>
+  </head>
+  <body>
+    {% block body %}
+    <span id='logout' style='float:right;margin:5px;'>Hello, {{ username }}! <a href='/logout'>Logout</a></span>
+    <div class="container">
+      <h2>Access Control</h2>
+        <div class="accordion" id="accordionControl">
+          <div class="card">
+            <div class="card-header" id="headingOne">
+              <h5 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  Admin List
+                </button>
+              </h5>
+            </div>
+            <div id="collapseOne" class="collapse {% if selected==1 %}{{ 'show' }}{% endif %}" aria-labelledby="headingOne" data-parent="#accordionControl">
+              <div class="card-body">
+                <div class='admin-add'>
+                    <form style="border: 1px black solid; padding: 3px" class="admin-add-form" runat="server" method="POST">
+                      <input type="hidden" name="panel" value="admin-list" />
+                      <input type="username" name="username" placeholder="Username" />
+                      <input type="password" name="password" placeholder="Password" /> <br /><br />
+                      <input style="width:230px;" type="password" name="admin-password" placeholder="Logged In Admin's Password" />
+                      <input type="submit" name="add" value="Add" />
+                    </form>
+                </div>
+                  {% for admin in get_admins() %}
+                    <div class='admin' style="border-bottom:1px blue solid;margin:20px;padding:5px;">{{ admin.username }}
+                      <form class="admin-form" runat="server" method="POST">
+                        <input type="hidden" name="panel" value="admin-list" />
+                        <input type="hidden" name="username" value="{{ admin.username }}" />
+                        <input style="width:230px;" type="password" name="admin-password" placeholder="Logged In Admin's Password" />
+                        <input type="submit" name="delete" value="Delete" />
+                      </form>
+                    </div>
+                  {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" id="headingTwo">
+              <h5 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                  Admin Log
+                </button>
+              </h5>
+            </div>
+            <div id="collapseTwo" class="collapse {% if selected==2 %}{{ 'show' }}{% endif %}" aria-labelledby="headingTwo" data-parent="#accordionControl">
+              <div class="card-body">
+              {% for log in get_admin_logs() %}
+                <div class='admin-log' style="border-bottom:1px blue solid;margin:20px;padding:5px;">{{ log.event }} | {{ log.cause }} | {{ log.date.strftime("%H:%M:%S %Y-%m-%d") }}</div>
+              {% endfor %}
+              <span class='admin-log-showall' style='align:right;'><a href='/admin-logs'>Show All</a></span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" id="headingThree">
+              <h5 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+                  User List
+                </button>
+              </h5>
+            </div>
+            <div id="collapseThree" class="collapse {% if selected==3 %}{{ 'show' }}{% endif %}" aria-labelledby="headingThree" data-parent="#accordionControl">
+              <div class="card-body">
+                  <div class='user-add'>
+                    <form class="user-add-form" runat="server" method="POST">
+                      <input type="hidden" name="panel" value="user-list" />
+                      <input type="number" name="id" placeholder="ID" />
+                      <input type="name" name="first-name" placeholder="First Name" />
+                      <input type="name" name="last-name" placeholder="Last Name" />
+                      <input type="email" name="email" placeholder="Email" />
+                      <input type="submit" name="add" value="Add" />
+                    </form>
+                  {% for user in get_users() %}
+                    <div class='user' style="border-bottom:1px blue solid;margin:20px;padding:5px;">{{ user.id }} | {{ user.name }} | {{ user.email }}
+                      <form class="user-form" runat="server" method="POST">
+                        <input type="hidden" name="panel" value="user-list" />
+                        <input type="hidden" name="id" value="{{ user.id }}" />
+                        <input type="hidden" name="name" value="{{ user.name }}" />
+                        <input type="hidden" name="email" value="{{ user.email }}" />
+                        <input type="submit" name="delete" value="Delete" />
+                      </form>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" id="headingFour">
+              <h5 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+                  User Log
+                </button>
+              </h5>
+            </div>
+            <div id="collapseFour" class="collapse {% if selected==4 %}{{ 'show' }}{% endif %}" aria-labelledby="headingFour" data-parent="#accordionControl">
+              <div class="card-body">
+              {% for log in get_user_logs() %}
+                <div class='admin-log' style="border-bottom:1px blue solid;margin:20px;padding:5px;">{{ log.event }} | {{ log.user }} | {{ log.date.strftime("%H:%M:%S %Y-%m-%d") }}</div>
+              {% endfor %}
+              <span class='user-log-showall' style='align:right;'><a href='/user-logs'>Show All</a></span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" id="headingFive">
+              <h5 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+                  User Search
+                </button>
+              </h5>
+            </div>
+            <div id="collapseFive" class="collapse {% if selected==5 %}{{ 'show' }}{% endif %}" aria-labelledby="headingFive" data-parent="#accordionControl">
+              <div class="card-body">
+                  <div class='user-search'>
+                    <form class="user-search-form" runat="server" method="POST">
+                      <input type="hidden" name="panel" value="user-search" />
+                      <input type="number" name="id" placeholder="ID" />
+                      <input type="name" name="name" placeholder="Name" />
+                      <input type="email" name="email" placeholder="Email" />
+                      <input type="submit" name="search" value="Search" />
+                    </form>
+                  {% for user in search_users %}
+                    <div class='user' style="border-bottom:1px blue solid;margin:20px;padding:5px;">{{ user.id }} | {{ user.name }} | {{ user.email }}
+                      <form class="user-form" runat="server" method="POST">
+                        <input type="hidden" name="panel" value="user-search" />
+                        <input type="hidden" name="id" value="{{ user.id }}" />
+                        <input type="hidden" name="name" value="{{ user.name }}" />
+                        <input type="hidden" name="email" value="{{ user.email }}" />
+                        <input type="submit" name="delete" value="Delete" />
+                      </form>
+                    </div>
+                  {% endfor %}
+                  </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" id="headingSix">
+              <h5 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
+                  Door Control
+                </button>
+              </h5>
+            </div>
+            <div id="collapseSix" class="collapse {% if selected==6 %}{{ 'show' }}{% endif %}" aria-labelledby="headingSix" data-parent="#accordionControl">
+              <div class="card-body">
+                  <div id="door-log">
+                    {% if door.is_open() %}<p class="door-info">Door is open.</p>
+                    {% else %}<p class="door-info">Door is closed.</p>{% endif %}
+                    
+                    {% if door.is_locked() %}<p class="door-info">Door is locked.</p>
+                    {% else %}<p class="door-info">Door is unlocked.</p>{% endif %}
+                    
+                    {% if door.is_blocked() %}<p class="door-info">Door is blocked.</p>
+                    {% else %}<p class="door-info">Door is not blocked.</p>{% endif %}
+                  </div>
+                  <div class='door-control'>
+                    <form class="door-control" runat="server" method="POST">
+                      <input type="hidden" name="panel" value="door-control" />
+                      <input type="submit" name="unlock" value="Unlock" />
+                      <input type="submit" name="lock" value="Lock" />
+                      <input type="submit" name="block" value="Block" />
+                      <input type="submit" name="unblock" value="Unblock" />
+                    </form>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> 
+    </div>
+    {% if get_flashed_messages() %}
+    <script>alert(
+        {% for message in get_flashed_messages() %}
+          "{{ message }}" + "\n"
+        {% endfor %});</script>
+    {% endif %}
+    {% endblock %}
+  </body>
+</html>

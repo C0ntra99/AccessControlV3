@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <title>User Logs - AccessControl</title>
+  </head>
+  <body>
+    {% block body %}
+    <span id='logout' style='float:right;margin:5px;'>Hello, {{ username }}! <a href='/logout'>Logout</a></span>
+    <span id='goto-home'><a href='/'>Return</a></span>
+        <div class="panel-body">
+          {% for log in get_all_user_logs() %}
+            <div class='user-log' style="border-bottom:1px blue solid;margin:20px;padding:5px;">{{ log.event }} | {{ log.user }} | {{ log.date.strftime("%H:%M:%S %Y-%m-%d") }}</div>
+          {% endfor %}
+        </div>
+    {% for message in get_flashed_messages() %}
+      <div class='flash'>{{ message }}</div>
+    {% endfor %}
+    {% endblock %}
+  </body>
+</html>

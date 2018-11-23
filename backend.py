@@ -7,6 +7,9 @@ from databases.tableDef import *
 import datetime
 import sys
 import time
+import os
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def log(user, event, time):
     log = AccessLog(user, event, time)
@@ -24,33 +27,27 @@ def checkCard(card):
         return False
 
 def main():
-    door.unlock()
     while True:
-        if door.checkLock():
-            led.turnOff(Led.AMBER)
-            led.turnOff(Led.GREEN)
-            led.turnOn(Led.RED)
-            continue
-        
-        led.turnOn(Led.AMBER)
-        led.turnOff(Led.GREEN)
-        led.turnOff(Led.RED)
-        
+        led.default(door)
         rawCard = input("SwipeCard: ")
-        formCard = rawCard[1:8]
+        formCard = rawCard[1:8]; print(door.is_blocked())
+
+        if door.is_blocked():
+            continue
+
         if checkCard(formCard):
-            try:
-                door.open()
+            if door.unlock():
                 print("Door open")
+                Thread(target=beeper.beep, args=(5,.05)).start()
                 time.sleep(3)
-            except:
+            else:
                 print("Door is locked: ")
-            
-            door.close()
+
+            door.lock()
         else:
             #Flash LEDs
+            Thread(target=beeper.beep, args=(1,1)).start()
             led.flashColor(Led.RED)
-
 
 
 if __name__ == "__main__":
